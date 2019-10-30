@@ -4,11 +4,15 @@ docker-compose down
 echo "Start the test stand"
 docker-compose up -d
 
+
+
 echo "Create dummy data in topic"
+
+DATA_SIZE=33554432
 docker-compose exec -T clickhouse clickhouse-client \
-  --query='SELECT number as id, intDiv( number, 65536 ) as block_no, base64Encode( reinterpretAsString( rand64() ) ) as val1, rand(1)*rand(2) / rand(3) as val2, rand(4) as val3, rand(5) as val4, rand(6) as val5, toString( rand64(2) ) as val6 from numbers(0x2000000) FORMAT TSV' \
-#  | pv -l -s 33554432   \ # uncomment to show progressbar
-  | docker-compose exec -T kafkacat kafkacat -b kafka:9092 -t dummytopic -P -l
+  --query="SELECT number as id, intDiv( number, 65536 ) as block_no, base64Encode( reinterpretAsString( rand64() ) ) as val1, rand(1)*rand(2) / rand(3) as val2, rand(4) as val3, rand(5) as val4, rand(6) as val5, toString( rand64(2) ) as val6 from numbers($DATA_SIZE) FORMAT TSV" | \
+  # pv -l -s $DATA_SIZE | \ # uncomment to show progressbar
+  docker-compose exec -T kafkacat kafkacat -b kafka:9092 -t dummytopic -P -l
 
 cat <<HEREDOC | docker-compose exec -T clickhouse clickhouse-client -n
 CREATE TABLE dummy_queue_tsv (
@@ -61,14 +65,17 @@ AS SELECT
    anyLast(val6) as someval6
 FROM dummy_queue_tsv
 GROUP BY block_no;
-
-
 HEREDOC
 
 echo 'Consuming started'
+echo '**********************************'
 echo 'Opening bash inside clickhouse container'
-echo 'try that query in clickhouse-client: select version(), sum(cnt) record_count, max(max_timestamp) - min(min_timestamp) produce_time, record_count / produce_time produce_speed, max(timestamp) - min(timestamp) consume_time, record_count / consume_time as consume_speed from kafka_stats; '
+echo '**********************************'
+echo 'try that query in clickhouse-client: select version(), sum(cnt) record_count, max(max_timestamp) - min(min_timestamp) produce_time, record_count / produce_time produce_speed, max(timestamp) - min(timestamp) consume_time, record_count / consume_time as consume_speed from kafka_stats;'
+echo 'perf top should also work in that container'
+echo '**********************************'
 docker-compose exec clickhouse bash
+
 #clickhouse-client
 
 

@@ -16,7 +16,7 @@ RUN wget --no-check-certificate ${deb_location}/clickhouse-common-static_${versi
 
 # debug tools + symbols (optional)
 RUN apt-get update \
-    && apt-get install linux-tools-common linux-tools-generic linux-tools-`uname -r` \
+    && DEBIAN_FRONTEND=noninteractive apt-get install --yes --no-install-recommends binutils linux-tools-common linux-tools-generic linux-tools-`uname -r` \
     && wget --no-check-certificate ${deb_location}/clickhouse-common-static-dbg_${version}_amd64.deb \
     && DEBIAN_FRONTEND=noninteractive dpkg -i *.deb \
     && rm -rf \

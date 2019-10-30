@@ -45,11 +45,11 @@ services:
         condition: service_healthy
 
   clickhouse:
-#    image: yandex/clickhouse-server:19.14.7.15
-    image: yandex/clickhouse-server:19.15.3.6
-    # image: yandex/clickhouse-server:ci_build_pr7475
-    # build:
-    #   context: ci_build/.
+#   image: yandex/clickhouse-server:19.14.7.15
+#   image: yandex/clickhouse-server:19.15.3.6
+    image: yandex/clickhouse-server:ci_build_pr7475
+    build:
+      context: ci_build/.
     expose:
       - "9000"
       - "9009"
