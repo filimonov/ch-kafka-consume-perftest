@@ -1,0 +1,83 @@
+version: '2.3'
+
+services:
+  zookeeper:
+    image: zookeeper:3.4.12
+    expose:
+      - "2181"
+    hostname: zookeeper
+    environment:
+      ZOO_TICK_TIME: 500
+      ZOO_MY_ID: 1
+    healthcheck:
+      test: echo stat | nc localhost 2181
+      interval: 3s
+      timeout: 2s
+      retries: 5
+      start_period: 2s
+    security_opt:
+      - label:disable
+
+  kafka:
+    image: confluentinc/cp-kafka:5.2.0
+    expose:
+      - "9092"
+    hostname: kafka
+    environment:
+      - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092
+      - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1
+      - KAFKA_BROKER_ID=1
+      - BOOTSTRAP_SERVERS=kafka:9092
+      - KAFKA_LISTENERS=PLAINTEXT://0.0.0.0:9092
+      - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
+      - ZOOKEEPER=zookeeper:2181
+      - KAFKA_LOG4J_LOGGERS=kafka.controller=INFO,kafka.producer.async.DefaultEventHandler=INFO,state.change.logger=INFO
+    healthcheck:
+      test: echo dump | nc zookeeper 2181 | grep '/brokers/ids/1'
+      interval: 3s
+      timeout: 2s
+      retries: 5
+      start_period: 2s
+    security_opt:
+      - label:disable
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+
+  clickhouse:
+#    image: yandex/clickhouse-server:19.14.7.15
+    image: yandex/clickhouse-server:19.15.3.6
+    # image: yandex/clickhouse-server:ci_build_pr7475
+    # build:
+    #   context: ci_build/.
+    expose:
+      - "9000"
+      - "9009"
+      - "8123"
+    hostname: clickhouse
+    volumes:
+      - ./configs/extra_config.xml:/etc/clickhouse-server/config.d/extra_config.xml
+      - ./logs/:/var/log/clickhouse-server/
+    healthcheck:
+      test: clickhouse client --query='select 1'
+      interval: 3s
+      timeout: 2s
+      retries: 5
+      start_period: 2s
+    cap_add:
+      - SYS_PTRACE
+      - SYS_ADMIN
+    security_opt:
+      - label:disable
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+
+  kafkacat:
+    image: confluentinc/cp-kafkacat
+    entrypoint: tail -f /dev/null
+    depends_on:
+      clickhouse:
+        condition: service_healthy
