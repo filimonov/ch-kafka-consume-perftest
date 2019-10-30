@@ -67,6 +67,7 @@ services:
     cap_add:
       - SYS_PTRACE
       - SYS_ADMIN
+    privileged: true # the easiest option to make perf and other debug tools work in the container
     security_opt:
       - label:disable
     depends_on:
