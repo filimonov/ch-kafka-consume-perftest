@@ -49,8 +49,8 @@ services:
 #   image: yandex/clickhouse-server:19.15.3.6
 #   image: yandex/clickhouse-server:19.17.4.11
     image: yandex/clickhouse-server:ci_build_pr7935
-      build:
-        context: ci_build/.
+    build:
+      context: ci_build/.
     expose:
       - "9000"
       - "9009"
