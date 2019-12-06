@@ -4,14 +4,13 @@ docker-compose down
 echo "Start the test stand"
 docker-compose up -d
 
-
-
 echo "Create dummy data in topic"
 
+#DATA_SIZE=100000
 DATA_SIZE=33554432
 docker-compose exec -T clickhouse clickhouse-client \
   --query="SELECT number as id, intDiv( number, 65536 ) as block_no, base64Encode( reinterpretAsString( rand64() ) ) as val1, rand(1)*rand(2) / rand(3) as val2, rand(4) as val3, rand(5) as val4, rand(6) as val5, toString( rand64(2) ) as val6 from numbers($DATA_SIZE) FORMAT TSV" | \
-  # pv -l -s $DATA_SIZE | \ # uncomment to show progressbar
+  pv -l -s $DATA_SIZE | \
   docker-compose exec -T kafkacat kafkacat -b kafka:9092 -t dummytopic -P -l
 
 cat <<HEREDOC | docker-compose exec -T clickhouse clickhouse-client -n
@@ -28,7 +27,7 @@ CREATE TABLE dummy_queue_tsv (
 SETTINGS
  kafka_broker_list = 'kafka:9092',
  kafka_topic_list = 'dummytopic',
- kafka_group_name = 'dummytopic_consumer_group',
+ kafka_group_name = 'dummytopic_consumer_group2',
  kafka_format = 'TSV',
  kafka_row_delimiter = '\n';
 
@@ -78,9 +77,11 @@ docker-compose exec clickhouse bash
 
 #clickhouse-client
 
-
 # ┌─version()────┬─record_count─┬─produce_time─┬─────produce_speed─┬─consume_time─┬──────consume_speed─┐
-# │ 19.17.1.1557 │     33554432 │           39 │ 860370.0512820513 │          499 │   67243.3507014028 │
 # │ 19.14.7.15   │     33554432 │           50 │         671088.64 │          203 │  165292.7684729064 │
 # │ 19.15.3.6    │     33554432 │           42 │ 798915.0476190476 │          623 │   53859.4414125200 │
+# │ 19.17.1.1557 │     33554432 │           39 │ 860370.0512820513 │          499 │   67243.3507014028 │
+# │ 19.18.1.1745 │     33554432 │           34 │ 986895.0588235294 │          276 │  121574.0298550725 │
+# │ 19.18.1.1747 │     33554432 │           36 │ 932067.5555555555 │          241 │  139230.0082987552 │
+# │ 19.18.1.1750 │     33554432 │           35 │ 958698.0571428571 │          204 │ 164482.50980392157 │
 # └──────────────┴──────────────┴──────────────┴───────────────────┴──────────────┴────────────────────┘

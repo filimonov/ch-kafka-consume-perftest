@@ -1,0 +1,1 @@
+(id = ${id:Raw}, blockNo = ${blockNo:Raw}, val1 = ${val1:CSV}, val2 = ${val2:Raw}, val3 = ${val3:Raw})

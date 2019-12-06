@@ -47,17 +47,26 @@ services:
   clickhouse:
 #   image: yandex/clickhouse-server:19.14.7.15
 #   image: yandex/clickhouse-server:19.15.3.6
-    image: yandex/clickhouse-server:ci_build_pr7475
-    build:
-      context: ci_build/.
+#   image: yandex/clickhouse-server:19.17.4.11
+    image: yandex/clickhouse-server:ci_build_pr7935
+      build:
+        context: ci_build/.
     expose:
       - "9000"
       - "9009"
       - "8123"
     hostname: clickhouse
     volumes:
+      - ./data-samples:/data-samples/
       - ./configs/extra_config.xml:/etc/clickhouse-server/config.d/extra_config.xml
       - ./logs/:/var/log/clickhouse-server/
+      - ./format_schemas/:/var/lib/clickhouse/format_schemas/:ro
+     # - ./configs/profiler.xml:/etc/clickhouse-server/users.d/profiler.xml
+     # - /home/mfilimonov/workspace/ClickHouse/build-vscode/clang_8_RelWithDebInfo/dbms/programs/clickhouse:/usr/bin/clickhouse
+     # - /home/mfilimonov/workspace/ClickHouse/build-vscode/clang_8_Debug/dbms/programs/clickhouse:/usr/bin/clickhouse
+     # - /home/mfilimonov/workspace/ClickHouse/dbms/:/dbms/:ro
+     # - /home/mfilimonov/workspace/ClickHouse/contrib/:/contrib/:ro
+     # - /home/mfilimonov/workspace/ClickHouse/libs/:/libs/:ro
     healthcheck:
       test: clickhouse client --query='select 1'
       interval: 3s
@@ -80,5 +89,8 @@ services:
     image: confluentinc/cp-kafkacat
     entrypoint: tail -f /dev/null
     depends_on:
-      clickhouse:
+      kafka:
         condition: service_healthy
+    volumes:
+      - ./data-samples:/data-samples/
+
