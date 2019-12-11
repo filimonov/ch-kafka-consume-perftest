@@ -1,7 +1,7 @@
 FROM yandex/clickhouse-server
 
-ARG deb_location="https://clickhouse-builds.s3.yandex.net/7935/ad136ec62d06de1174778babb2b6d98c4f3172bb/1575028742_deb/"
-ARG version=19.18.1.1750
+ARG deb_location="https://clickhouse-builds.s3.yandex.net/8035/f6e059a378393fdb3219b701fa507eac0277a446/1575999027_deb/"
+ARG version=19.19.1.1836
 
 RUN wget --no-check-certificate ${deb_location}/clickhouse-common-static_${version}_amd64.deb \
     && wget --no-check-certificate ${deb_location}/clickhouse-client_${version}_all.deb \

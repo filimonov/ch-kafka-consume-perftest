@@ -40,7 +40,7 @@ do
     extra_args+=('; rm -f *_tmp_convert.orc*')
     extra_args+=('; orc.java convert _tmp_convert.json -o _tmp_convert.orc')
     extra_args+=('; cat _tmp_convert.orc')
- elif [ "$format" == "Protobuf" ]; then_tmp_convert
+ elif [ "$format" == "Protobuf" ]; then
     extra_args+=('--format_schema="format_schemas/test:TestMessage"')
  fi
  query="SELECT toInt64(number) as id, toUInt16( intDiv( id, 65536 ) ) as blockNo, reinterpretAsString(19777) as val1, toFloat32(0.5) as val2, toUInt8(1) as val3 from numbers(75000) ORDER BY id"
